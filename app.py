@@ -168,7 +168,7 @@ def chat():
         return jsonify({"reply": "Something went wrong. Please try again."})
 
 # ── Admin panel ───────────────────────────────────────────────────────
-ADMIN_PASSWORD = "aarogya123"
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "aarogya123")
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():

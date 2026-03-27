@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aarogya Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f4f6f4; min-height: 100vh; }
+    .topbar { background: #1D9E75; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar .title { font-size: 18px; font-weight: 600; color: #fff; }
+    .topbar .sub { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+    .logout { font-size: 12px; color: rgba(255,255,255,0.85); text-decoration: none; padding: 6px 14px; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; }
+    .content { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .metric { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #eee; }
+    .metric-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+    .metric-val { font-size: 26px; font-weight: 600; color: #1D9E75; }
+    .section { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 18px; margin-bottom: 18px; }
+    .nav-tabs { display: flex; gap: 0; border-bottom: 1px solid #eee; margin-bottom: 18px; overflow-x: auto; }
+    .tab { padding: 10px 18px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; white-space: nowrap; }
+    .tab.active { border-bottom-color: #1D9E75; color: #1D9E75; font-weight: 500; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; font-size: 11px; color: #888; border-bottom: 1px solid #f0f0f0; font-weight: 500; }
+    td { padding: 9px 10px; border-bottom: 1px solid #f8f8f8; color: #333; word-break: break-word; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; }
+    .b-green { background: #e8f8f2; color: #0F6E56; }
+    .b-amber { background: #fef3e2; color: #854F0B; }
+    .b-red { background: #fde8e8; color: #A32D2D; }
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .form-row input, .form-row textarea { flex: 1; min-width: 140px; padding: 9px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; font-family: sans-serif; }
+    .form-row input:focus, .form-row textarea:focus { border-color: #1D9E75; }
+    .btn { padding: 9px 20px; background: #1D9E75; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .btn:hover { background: #0F6E56; }
+    .del-btn { font-size: 11px; padding: 3px 10px; border: 1px solid #E24B4A; border-radius: 20px; color: #E24B4A; background: transparent; cursor: pointer; }
+    .del-btn:hover { background: #fde8e8; }
+    .success-msg { background: #e8f8f2; color: #0F6E56; padding: 8px 14px; border-radius: 8px; font-size: 13px; margin-top: 8px; display: none; }
+    .error-msg { background: #fde8e8; color: #A32D2D; padding: 8px 14px; border-radius: 8px; font-size: 13px; margin-top: 8px; display: none; }
+    .empty { text-align: center; color: #aaa; font-size: 13px; padding: 24px 0; }
+    .form-box { background: #f9f9f9; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #eee; }
+    .form-box-title { font-size: 13px; font-weight: 600; color: #222; margin-bottom: 8px; }
+    .hint { font-size: 12px; color: #999; margin-bottom: 12px; line-height: 1.6; background: #fff8e8; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #EF9F27; }
+    .login-box { max-width: 360px; margin: 100px auto; background: #fff; border-radius: 16px; padding: 32px; border: 1px solid #eee; text-align: center; }
+    .login-box h2 { font-size: 22px; color: #1D9E75; margin-bottom: 6px; }
+    .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .login-box input { width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; }
+    .login-box input:focus { border-color: #1D9E75; }
+    .login-box .btn { width: 100%; padding: 11px; font-size: 14px; }
+    .error { color: #E24B4A; font-size: 13px; margin-bottom: 10px; }
+    .section-label { font-size: 13px; font-weight: 600; color: #444; margin: 14px 0 8px; }
+  </style>
+</head>
+<body>
+
+{% if not logged_in %}
+<div class="login-box">
+  <h2>Aarogya</h2>
+  <p>Admin Panel — Login to continue</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <input type="password" name="password" placeholder="Enter admin password" autofocus/>
+    <button class="btn" type="submit">Login</button>
+  </form>
+</div>
+
+{% else %}
+<div class="topbar">
+  <div>
+    <div class="title">Aarogya Admin Panel</div>
+    <div class="sub">Health chatbot dashboard</div>
+  </div>
+  <a href="/admin/logout" class="logout">Logout</a>
+</div>
+
+<div class="content">
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Total users</div>
+      <div class="metric-val">{{ user_count }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Reminders</div>
+      <div class="metric-val">{{ reminder_count }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Web chats</div>
+      <div class="metric-val">{{ web_chats|length }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Bot status</div>
+      <div class="metric-val" style="font-size:14px;margin-top:6px;color:#1D9E75">Online</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="nav-tabs">
+      <div class="tab active" onclick="showTab('users',this)">Users ({{ user_count }})</div>
+      <div class="tab" onclick="showTab('reminders',this)">Reminders</div>
+      <div class="tab" onclick="showTab('alerts',this)">Send Alert</div>
+      <div class="tab" onclick="showTab('chats',this)">Web Chats</div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="users" class="tab-content active">
+      {% if users %}
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Phone number</th>
+          <th>Joined</th>
+        </tr>
+        {% for u in users %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ u.phone }}</td>
+          <td>{{ u.joined.strftime('%d %b %Y %I:%M %p') if u.joined else 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty">No users yet. Share the chatbot link to get started.</div>
+      {% endif %}
+    </div>
+
+    <!-- REMINDERS TAB -->
+    <div id="reminders" class="tab-content">
+      <div class="form-box">
+        <div class="form-box-title">Add new reminder</div>
+        <div class="hint">
+          Enter 10 digit mobile number only — e.g. 9453797191<br>
+          Country code +91 and whatsapp: prefix are added automatically.<br>
+          Set the date and time when the WhatsApp message should be sent.
+        </div>
+        <div class="form-row">
+          <input id="r-phone" placeholder="10 digit mobile number e.g. 9453797191"/>
+        </div>
+        <div class="form-row">
+          <input id="r-date" type="date"/>
+          <input id="r-time" type="time"/>
+        </div>
+        <div class="form-row">
+          <input id="r-msg" placeholder="Reminder message e.g. Polio vaccine due for your child"/>
+          <button class="btn" onclick="addReminder()">Add reminder</button>
+        </div>
+        <div class="success-msg" id="r-success">Reminder added successfully. Refreshing...</div>
+        <div class="error-msg" id="r-error">Failed to add reminder. Please try again.</div>
+      </div>
+
+      <div class="section-label">All reminders</div>
+      {% if reminders %}
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+        {% for r in reminders %}
+        <tr id="row-{{ loop.index }}">
+          <td>{{ loop.index }}</td>
+          <td>{{ r.phone }}</td>
+          <td>{{ r.date }}</td>
+          <td>{{ r.time if r.time else 'N/A' }}</td>
+          <td>{{ r.message }}</td>
+          <td>
+            <span class="badge {{ 'b-green' if r.sent else 'b-amber' }}">
+              {{ 'Sent' if r.sent else 'Pending' }}
+            </span>
+          </td>
+          <td>
+            {% if not r.sent %}
+            <button class="del-btn" onclick="deleteReminder('{{ r.id }}', {{ loop.index }})">Delete</button>
+            {% else %}
+            —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty">No reminders yet. Add one above.</div>
+      {% endif %}
+    </div>
+
+    <!-- ALERTS TAB -->
+    <div id="alerts" class="tab-content">
+      <div class="form-box">
+        <div class="form-box-title">Send health alert to all users</div>
+        <div class="hint">
+          This will send a WhatsApp message to all {{ user_count }} registered users immediately.<br>
+          Use this for disease outbreak warnings, vaccination camps, or health tips.
+        </div>
+        <div class="form-row">
+          <textarea id="alert-msg" rows="4" placeholder="e.g. Dengue cases rising in your area. Please use mosquito nets, wear full sleeves, and remove standing water near your home."></textarea>
+        </div>
+        <button class="btn" onclick="sendAlert()">Send to all {{ user_count }} users</button>
+        <div class="success-msg" id="a-success">Alert sent successfully.</div>
+        <div class="error-msg" id="a-error">Failed to send alert. Please try again.</div>
+      </div>
+    </div>
+
+    <!-- WEB CHATS TAB -->
+    <div id="chats" class="tab-content">
+      {% if web_chats %}
+      <table>
+        <tr>
+          <th>Message</th>
+          <th>Reply</th>
+          <th>Time</th>
+        </tr>
+        {% for c in web_chats %}
+        <tr>
+          <td>{{ c.message }}</td>
+          <td>{{ c.reply[:100] }}{% if c.reply|length > 100 %}...{% endif %}</td>
+          <td>{{ c.time.strftime('%d %b %I:%M %p') if c.time else 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty">No web chats yet.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+<script>
+function showTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+
+async function addReminder() {
+  const phone = document.getElementById('r-phone').value.trim();
+  const date  = document.getElementById('r-date').value;
+  const time  = document.getElementById('r-time').value;
+  const msg   = document.getElementById('r-msg').value.trim();
+
+  document.getElementById('r-success').style.display = 'none';
+  document.getElementById('r-error').style.display   = 'none';
+
+  if (!phone || !date || !time || !msg) {
+    alert('Please fill all 4 fields — phone, date, time, and message');
+    return;
+  }
+
+  try {
+    const res  = await fetch('/admin/add-reminder', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({phone, date, time, message: msg})
+    });
+    const data = await res.json();
+    if (data.status === 'added') {
+      document.getElementById('r-success').style.display = 'block';
+      document.getElementById('r-phone').value = '';
+      document.getElementById('r-date').value  = '';
+      document.getElementById('r-time').value  = '';
+      document.getElementById('r-msg').value   = '';
+      setTimeout(() => { location.reload(); }, 2000);
+    } else {
+      document.getElementById('r-error').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('r-error').style.display = 'block';
+  }
+}
+
+async function deleteReminder(id, index) {
+  if (!confirm('Are you sure you want to delete this reminder?')) return;
+  try {
+    const res  = await fetch('/admin/delete-reminder', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({id})
+    });
+    const data = await res.json();
+    if (data.status === 'deleted') {
+      const row = document.getElementById('row-' + index);
+      if (row) row.remove();
+    }
+  } catch(e) {
+    alert('Failed to delete. Please try again.');
+  }
+}
+
+async function sendAlert() {
+  const msg = document.getElementById('alert-msg').value.trim();
+
+  document.getElementById('a-success').style.display = 'none';
+  document.getElementById('a-error').style.display   = 'none';
+
+  if (!msg) {
+    alert('Please type an alert message first');
+    return;
+  }
+  if (!confirm('Send this alert to all users on WhatsApp now?')) return;
+
+  try {
+    const res  = await fetch('/admin/send-alert', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({message: msg})
+    });
+    const data = await res.json();
+    const box  = document.getElementById('a-success');
+    box.textContent    = 'Alert sent to ' + data.count + ' users successfully.';
+    box.style.display  = 'block';
+    document.getElementById('alert-msg').value = '';
+    setTimeout(() => { box.style.display = 'none'; }, 5000);
+  } catch(e) {
+    document.getElementById('a-error').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
+

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aarogya — Health Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4f0; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+    .container { width: 100%; height: 100vh; background: #fff; display: flex; flex-direction: column; border-radius: 0; box-shadow: none; }
+    .topbar { background: #1D9E75; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; flex-shrink: 0; }
+    .bot-info .name { font-size: 16px; font-weight: 600; color: #fff; }
+    .bot-info .sub { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+    .online { width: 9px; height: 9px; border-radius: 50%; background: #a8f0d4; margin-left: auto; }
+    .lang-bar { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; background: #fafafa; align-items: center; }
+    .lang-bar span { font-size: 11px; color: #888; margin-right: 4px; }
+    .lang-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; background: #fff; color: #555; }
+    .lang-btn.active { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+    .messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #f5f7f5; }
+    .msg { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.55; }
+    .msg.bot { background: #fff; color: #222; border-bottom-left-radius: 3px; align-self: flex-start; border: 1px solid #e8e8e8; }
+    .msg.user { background: #1D9E75; color: #fff; border-bottom-right-radius: 3px; align-self: flex-end; }
+    .msg-time { font-size: 10px; margin-top: 5px; opacity: 0.55; text-align: right; }
+    .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .qbtn { font-size: 11px; padding: 4px 11px; border: 1px solid #1D9E75; border-radius: 20px; color: #1D9E75; cursor: pointer; background: transparent; }
+    .qbtn:hover { background: #e8f8f2; }
+    .typing { display: none; align-items: center; gap: 4px; padding: 10px 14px; background: #fff; border: 1px solid #e8e8e8; border-radius: 14px; border-bottom-left-radius: 3px; align-self: flex-start; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; animation: bounce 1s infinite; }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+    .inputbar { padding: 10px 12px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; align-items: center; background: #fff; }
+    .inputbar input { flex: 1; padding: 10px 16px; border: 1px solid #e0e0e0; border-radius: 24px; font-size: 13px; outline: none; background: #f9f9f9; }
+    .inputbar input:focus { border-color: #1D9E75; background: #fff; }
+    .send-btn { width: 40px; height: 40px; border-radius: 50%; background: #1D9E75; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .send-btn svg { width: 17px; height: 17px; fill: #fff; }
+    .footer { text-align: center; font-size: 11px; color: #aaa; padding: 8px; background: #fff; border-top: 1px solid #f5f5f5; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="avatar">A</div>
+    <div class="bot-info">
+      <div class="name">Aarogya</div>
+      <div class="sub">Public Health Assistant</div>
+    </div>
+    <div class="online"></div>
+  </div>
+  <div class="lang-bar">
+    <span>Language:</span>
+    <button class="lang-btn active" onclick="setLang('auto',this)">Auto</button>
+    <button class="lang-btn" onclick="setLang('en',this)">English</button>
+    <button class="lang-btn" onclick="setLang('hi',this)">हिंदी</button>
+  </div>
+  <div class="messages" id="msgs">
+    <div class="msg bot">
+      Namaste! I am Aarogya, your health assistant. Ask me anything about health, diseases, symptoms, or prevention.
+      <div class="msg-time">now</div>
+      <div class="quick-btns">
+        <button class="qbtn" onclick="quickSend('Fever symptoms')">Fever</button>
+        <button class="qbtn" onclick="quickSend('Dengue symptoms')">Dengue</button>
+        <button class="qbtn" onclick="quickSend('Malaria prevention')">Malaria</button>
+        <button class="qbtn" onclick="quickSend('Child vaccination schedule')">Vaccines</button>
+        <button class="qbtn" onclick="quickSend('TB symptoms')">TB</button>
+      </div>
+    </div>
+  </div>
+  <div class="typing" id="typing"><span></span><span></span><span></span></div>
+  <div class="inputbar">
+    <input id="userinput" placeholder="Type your health question..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+    <button class="send-btn" onclick="sendMsg()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="footer">Aarogya Health Chatbot — For emergencies call 108</div>
+</div>
+<script>
+  let forceLang = 'auto';
+  function setLang(l, el) {
+    forceLang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function quickSend(text) {
+    document.getElementById('userinput').value = text;
+    sendMsg();
+  }
+  function now() {
+    return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+  function addMsg(text, type) {
+    const msgs = document.getElementById('msgs');
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.innerHTML = text.replace(/\n/g,'<br>') + '<div class="msg-time">' + now() + '</div>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  async function sendMsg() {
+    const input = document.getElementById('userinput');
+    let text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addMsg(text, 'user');
+    const typing = document.getElementById('typing');
+    typing.style.display = 'flex';
+    document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, lang: forceLang})
+      });
+      const data = await res.json();
+      typing.style.display = 'none';
+      addMsg(data.reply, 'bot');
+    } catch(e) {
+      typing.style.display = 'none';
+      addMsg('Sorry, could not connect. Please try again.', 'bot');
+    }
+  }
+</script>
+</body>
+</html>

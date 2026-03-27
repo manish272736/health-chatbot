@@ -126,9 +126,9 @@ def format_phone(phone):
     return phone
 
 # ── Public chatbot website ────────────────────────────────────────────
-@app.route("/")
-def home():
-    return render_template("chat.html")
+@app.route("/health")
+def health():
+    return "OK", 200
 
 @app.route("/chat", methods=["POST"])
 def chat():

@@ -126,6 +126,13 @@ def format_phone(phone):
     return phone
 
 # ── Public chatbot website ────────────────────────────────────────────
+@app.route("/")
+def home():
+    try:
+        return render_template("chat.html")
+    except Exception as e:
+        return f"Template Error: {str(e)}", 500
+
 @app.route("/health")
 def health():
     return "OK", 200

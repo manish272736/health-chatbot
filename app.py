@@ -14,7 +14,7 @@ from googletrans import Translator as GTranslator
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
 app.secret_key = "aarogya_admin_secret_123"
 
 print("Connecting to services...")
